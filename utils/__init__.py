@@ -9,19 +9,22 @@ def return_ytdlp_fname():
     return YTDLP_FNAME
 
 def get_transcript(f, ftype):
-    transcriber = aai.Transcriber()
+    config = aai.TranscriptionConfig(
+        language_code='vi'
+        )
+    transcriber = aai.Transcriber(config=config)
 
     print("entered")
     print(ftype)
     if ftype == 'YouTube link':
-        with st.spinner('Downloading video...'):
+        with st.spinner('Đang tải video...'):
             ydl_opts = {'outtmpl': YTDLP_FNAME}
-            print("downloading")
+            print("đang tải")
             with YoutubeDL(ydl_opts) as ydl:
                 ydl.download([f])
                 f = YTDLP_FNAME
     print("returning", f)
-    with st.spinner('Transcribing file...'):
+    with st.spinner('Đang biên dịch ...'):
         transcript = transcriber.transcribe(f)
     if transcript.error:
         raise TranscriptionException(transcript.error)
