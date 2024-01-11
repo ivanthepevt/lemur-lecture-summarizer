@@ -7,10 +7,10 @@ load_dotenv()
 
 from utils import get_transcript, ask_question, return_ytdlp_fname
 
-environ_key = os.environ.get("ASSEMBLYAI_API_KEY")
+environ_key = "c1b0224fb3c14871964b3b47893df872"
 if environ_key is None:
     pass
-elif environ_key == "paste-your-key-here":
+elif environ_key == "":
     environ_key = None
 else:
     aai.settings.api_key = environ_key
@@ -43,18 +43,12 @@ def set_aai_key():
 
 # MAIN APPLICATION CONTENT
 
-"# Lecture Summarizer"
-"Use this application to **automatically summarize a virtual lecture** and **ask questions** about the lesson material."
-"Learn how to build this app [here](https://www.assemblyai.com/blog/build-an-interactive-lecture-summarization-app/)."
+"# NaviAI SumMate"
+"Tóm tắt bài thuyết trình/ tiết học/ bài giảng"
 
-with st.expander("Processing time"):
-    "The time to process a file is 15-30% of the file's duration, so an hour-long lecture will take several minutes to process."
-    "If a YouTube link is used, additional time will be required to extract the file."
-
-st.divider()
 
 if not environ_key:
-    "## API Key"
+    "## Không phát hiện API Key"
     """
 To get started, paste your AssemblyAI API key in the below box.
 If you don't have an API key, you can get one [here](https://www.assemblyai.com/dashboard/signup). You will need to set up billing in order to use this application since it uses [LeMUR](https://www.assemblyai.com/blog/lemur/).
@@ -72,15 +66,14 @@ You can copy your API key by pressing the `Copy token` button on the right hand 
     st.warning("Note: You can avoid this section by setting the `ASSEMBLYAI_API_KEY` environment variable, either through the terminal or the `.env` file.", icon="🗒️")
 
 if input_key or environ_key:
-    "## Lecture"
     """
-    Enter the lecture you would like to summarize below. You can use a local file on your computer, a remote file that is publicly-available online, or a YouTube video.
+    Chọn video bạn cần tóm tắt, bạn có thể chọn file trên máy, trên Drive hoặc trên YouTube.
     """
 
     # File type options
-    ftype = st.radio("File type", ('Local file', 'Remote file', 'YouTube link'))
+    ftype = st.radio("Chọn file", ('Tải lên từ máy', 'Drive', 'YouTube link'))
 
-    if ftype == 'Local file':
+    if ftype == 'Tải lên từ máy':
         # Store the uploaded file in a temporary file
         f = st.file_uploader("File")
         if f:
@@ -89,26 +82,28 @@ if input_key or environ_key:
             with open(temp_fname, 'wb') as fl:
                 fl.write(f.read())
             f = temp_fname
-    elif ftype == 'Remote file':
+    elif ftype == 'Drive':
         f = st.text_input("Link", 
                           value="https://storage.googleapis.com/aai-web-samples/cs50p-unit-tests.mp3",
                           placeholder="Public link to the file"
                           )
     elif ftype == 'YouTube link':
         f = st.text_input("Link",
-                          value="https://www.youtube.com/watch?v=tIrcxwLqzjQ",
+                          value="https://www.youtube.com/watch?v=7sDRk_oGRjg",
                           placeholder="YouTube link"
                           )
 
-    value = "" if ftype == "Local file" else "A lesson from Harvard's CS50P course. The lesson is about Unit Testing in Python."
-    placeholder = "Contextualizing information about the file (optional)"
-    context = st.text_input("Context", value=value, placeholder=placeholder)
+    value = "" if ftype == "Local file" else "Video thuyết trình về mẫu xe Vinfast VF7"
+    placeholder = "Mô tả file để AI hiểu chính xác hơn"
+    context = st.text_input("Mô tả", value=value, placeholder=placeholder)
      
 if f:
     entered = st.button("Submit")
     if entered:
               
         transcript = get_transcript(f, ftype)
+        print(transcript.text)
+
         if ftype == "Local file":
             os.remove(f)
         elif ftype == "YouTube link":
@@ -118,12 +113,12 @@ if f:
 
 
         params = {
-            'answer_format': "**<part of the lesson>**\n<list of important points in that part>",
+            'answer_format': "**<Tóm tắt>**\n<Những ý chính trong video bao gồm>",
             'max_output_size': 4000
         }
         if context: params['context'] = context
         
-        with st.spinner("Generating summary..."):
+        with st.spinner("Đang tóm tắt..."):
             try:
                 summary = transcript.lemur.summarize(**params)
                 st.session_state['summary'] = summary.response.strip().split('\n')
@@ -134,7 +129,7 @@ if f:
                st.session_state['entered'] = False
 
 if st.session_state['entered']:
-    "## Results"
+    "## Kết quả"
     
     if st.session_state['summary']:
         for i in st.session_state['summary']:
@@ -142,16 +137,16 @@ if st.session_state['entered']:
 
 
 if st.session_state['summary']:
-    "# Questions"
-    "Ask a question about the lesson below:"
+    "# Hỏi đáp nâng cao"
+    "Nhập câu hỏi về một thông tin cụ thể trong video:"
     
-    question = st.text_input("Question",
-                              placeholder="What is the point of using Pytest?",
+    question = st.text_input("Nhập câu hỏi",
+                              placeholder="",
                               )
     
     question_asked = st.button("Submit", key='question_asked')
     if question_asked:
-        with st.spinner('Asking question...'):
+        with st.spinner('Đang tìm kiếm câu trả lời...'):
             answer = ask_question(st.session_state['transcript'], question)
     answer
     
